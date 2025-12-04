@@ -6,7 +6,6 @@ const nodemailer = require("nodemailer");
 // ============= CONFIGURATION =============
 
 const validatePassword = (password) => {
-  // At least 8 chars, 1 uppercase, 1 lowercase, 1 number
   const regex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).{8,}$/;
   return regex.test(password);
 };
@@ -16,7 +15,6 @@ const validateEmail = (email) => {
   return regex.test(email);
 };
 
-// Email verification token utility
 const generateVerificationToken = () => {
   return (
     Math.random().toString(36).substring(2, 15) +
@@ -25,18 +23,17 @@ const generateVerificationToken = () => {
 };
 
 // ============= HELPER: DYNAMIC COOKIE OPTIONS =============
-// NEW: This helper function creates cookies with correct domain for production/dev
+// NEW: Dynamic cookie domain for production/dev
 
 const getCookieOptions = () => {
   const isProduction = process.env.NODE_ENV === "production";
   const frontendUrl = process.env.FRONTEND_URL || "http://localhost:5173";
 
-  // Extract domain from frontend URL
   let domain = "localhost";
   if (isProduction) {
     try {
       const url = new URL(frontendUrl);
-      domain = url.hostname; // e.g., marry-matha-karupatti-1.onrender.com
+      domain = url.hostname;
     } catch (error) {
       console.warn("Invalid FRONTEND_URL, using default domain", error);
       domain = "localhost";
@@ -45,9 +42,9 @@ const getCookieOptions = () => {
 
   return {
     httpOnly: true,
-    secure: isProduction, // true in production (HTTPS only)
-    sameSite: isProduction ? "none" : "lax", // "none" for cross-site in production
-    domain: domain,
+    secure: isProduction,
+    sameSite: isProduction ? "none" : "lax",
+    domain,
   };
 };
 
@@ -135,7 +132,6 @@ const googleAuthCallback = async (req, res) => {
       );
     }
 
-    // Generate tokens for Google OAuth user
     const accessToken = jwt.sign(
       {
         id: user._id,
@@ -156,7 +152,6 @@ const googleAuthCallback = async (req, res) => {
       { expiresIn: "7d" }
     );
 
-    // Store refresh token in database
     user.refreshTokens = user.refreshTokens || [];
     user.refreshTokens.push(refreshToken);
     await user.save();
@@ -164,15 +159,14 @@ const googleAuthCallback = async (req, res) => {
     // ✅ NEW: Get dynamic cookie options
     const cookieOptions = getCookieOptions();
 
-    // Set cookies with dynamic domain
     res
       .cookie("accessToken", accessToken, {
         ...cookieOptions,
-        maxAge: 15 * 60 * 1000, // 15 minutes
+        maxAge: 15 * 60 * 1000,
       })
       .cookie("refreshToken", refreshToken, {
         ...cookieOptions,
-        maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
+        maxAge: 7 * 24 * 60 * 60 * 1000,
       })
       .redirect(`${process.env.FRONTEND_URL}/auth/google-success`);
   } catch (error) {
@@ -189,7 +183,6 @@ const registerUser = async (req, res) => {
   const { userName, email, password, confirmPassword } = req.body;
 
   try {
-    // Validation
     if (!userName || !email || !password || !confirmPassword) {
       return res.status(400).json({
         success: false,
@@ -219,7 +212,6 @@ const registerUser = async (req, res) => {
       });
     }
 
-    // Check if user already exists
     const checkUser = await User.findOne({ email });
     if (checkUser) {
       return res.status(400).json({
@@ -228,7 +220,6 @@ const registerUser = async (req, res) => {
       });
     }
 
-    // Check if username is taken
     const checkUsername = await User.findOne({ userName });
     if (checkUsername) {
       return res.status(400).json({
@@ -237,11 +228,9 @@ const registerUser = async (req, res) => {
       });
     }
 
-    // Hash password
     const hashPassword = await bcrypt.hash(password, 12);
     const verificationToken = generateVerificationToken();
 
-    // Create new user
     const newUser = new User({
       userName,
       email,
@@ -253,7 +242,6 @@ const registerUser = async (req, res) => {
 
     await newUser.save();
 
-    // Send verification email
     try {
       await sendVerificationEmail(email, verificationToken);
     } catch (emailError) {
@@ -325,7 +313,6 @@ const loginUser = async (req, res) => {
       });
     }
 
-    // Check if user exists
     const checkUser = await User.findOne({ email }).select("+password");
     if (!checkUser) {
       return res.status(401).json({
@@ -334,7 +321,6 @@ const loginUser = async (req, res) => {
       });
     }
 
-    // Check if user is Google OAuth user (no password)
     if (checkUser.googleId && !checkUser.password) {
       return res.status(403).json({
         success: false,
@@ -342,7 +328,6 @@ const loginUser = async (req, res) => {
       });
     }
 
-    // Check if email is verified (only for email/password users)
     if (!checkUser.googleId && !checkUser.isEmailVerified) {
       return res.status(403).json({
         success: false,
@@ -351,7 +336,6 @@ const loginUser = async (req, res) => {
       });
     }
 
-    // Check password
     const checkPasswordMatch = await bcrypt.compare(password, checkUser.password);
     if (!checkPasswordMatch) {
       return res.status(401).json({
@@ -360,7 +344,6 @@ const loginUser = async (req, res) => {
       });
     }
 
-    // Generate access token (15 minutes)
     const accessToken = jwt.sign(
       {
         id: checkUser._id,
@@ -372,7 +355,6 @@ const loginUser = async (req, res) => {
       { expiresIn: "15m" }
     );
 
-    // Generate refresh token (7 days)
     const refreshToken = jwt.sign(
       {
         id: checkUser._id,
@@ -382,7 +364,6 @@ const loginUser = async (req, res) => {
       { expiresIn: "7d" }
     );
 
-    // Store refresh token in database (for token rotation)
     checkUser.refreshTokens = checkUser.refreshTokens || [];
     checkUser.refreshTokens.push(refreshToken);
     await checkUser.save();
@@ -390,15 +371,14 @@ const loginUser = async (req, res) => {
     // ✅ NEW: Get dynamic cookie options
     const cookieOptions = getCookieOptions();
 
-    // Set cookies with dynamic domain
     res
       .cookie("accessToken", accessToken, {
         ...cookieOptions,
-        maxAge: 15 * 60 * 1000, // 15 minutes
+        maxAge: 15 * 60 * 1000,
       })
       .cookie("refreshToken", refreshToken, {
         ...cookieOptions,
-        maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
+        maxAge: 7 * 24 * 60 * 60 * 1000,
       });
 
     return res.status(200).json({
@@ -434,13 +414,11 @@ const refreshAccessToken = async (req, res) => {
       });
     }
 
-    // Verify refresh token
     const decoded = jwt.verify(
       refreshToken,
       process.env.REFRESH_TOKEN_SECRET || "REFRESH_SECRET_KEY"
     );
 
-    // Check if user exists and token is in database
     const user = await User.findById(decoded.id);
     if (!user || !user.refreshTokens.includes(refreshToken)) {
       return res.status(401).json({
@@ -449,7 +427,6 @@ const refreshAccessToken = async (req, res) => {
       });
     }
 
-    // Generate new access token
     const newAccessToken = jwt.sign(
       {
         id: user._id,
@@ -464,10 +441,9 @@ const refreshAccessToken = async (req, res) => {
     // ✅ NEW: Get dynamic cookie options
     const cookieOptions = getCookieOptions();
 
-    // Set new access token cookie
     res.cookie("accessToken", newAccessToken, {
       ...cookieOptions,
-      maxAge: 15 * 60 * 1000, // 15 minutes
+      maxAge: 15 * 60 * 1000,
     });
 
     return res.status(200).json({
@@ -505,7 +481,6 @@ const forgotPassword = async (req, res) => {
 
     const user = await User.findOne({ email });
     if (!user) {
-      // Don't reveal if email exists for security
       return res.status(200).json({
         success: true,
         message: "If email exists, password reset link has been sent",
@@ -514,7 +489,7 @@ const forgotPassword = async (req, res) => {
 
     const resetToken = generateVerificationToken();
     user.resetPasswordToken = resetToken;
-    user.resetPasswordExpiry = Date.now() + 60 * 60 * 1000; // 1 hour
+    user.resetPasswordExpiry = Date.now() + 60 * 60 * 1000;
     await user.save();
 
     try {
@@ -576,7 +551,6 @@ const resetPassword = async (req, res) => {
       });
     }
 
-    // Hash new password
     const hashPassword = await bcrypt.hash(newPassword, 12);
     user.password = hashPassword;
     user.resetPasswordToken = null;
@@ -600,21 +574,18 @@ const resetPassword = async (req, res) => {
 
 const logoutUser = async (req, res) => {
   try {
-    // Get user from request (if authenticated)
     const userId = req.user?.id;
 
     if (userId) {
-      // Remove refresh token from database if user is authenticated
       await User.findByIdAndUpdate(
         userId,
         { $pull: { refreshTokens: req.cookies.refreshToken } }
       );
     }
 
-    // ✅ NEW: Get dynamic cookie options for clearing
+    // ✅ NEW: Get dynamic cookie options
     const cookieOptions = getCookieOptions();
 
-    // Clear cookies
     res
       .clearCookie("accessToken", cookieOptions)
       .clearCookie("refreshToken", cookieOptions);

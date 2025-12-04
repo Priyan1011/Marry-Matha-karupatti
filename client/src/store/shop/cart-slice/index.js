@@ -14,7 +14,7 @@ export const addToCart = createAsyncThunk(
     // If user is authenticated, use API
     if (userId) {
       const response = await axios.post(
-        "http://localhost:5000/api/shop/cart/add",
+        "https://marry-matha-karupatti.onrender.com/api/shop/cart/add",
         {
           userId,
           productId,
@@ -41,7 +41,7 @@ export const fetchCartItems = createAsyncThunk(
     // If user is authenticated, use API
     if (userId) {
       const response = await axios.get(
-        `http://localhost:5000/api/shop/cart/get/${userId}`
+        `https://marry-matha-karupatti.onrender.com/api/shop/cart/get/${userId}`
       );
       return response.data;
     } else {
@@ -62,7 +62,7 @@ export const deleteCartItem = createAsyncThunk(
     // If user is authenticated, use API
     if (userId) {
       const response = await axios.delete(
-        `http://localhost:5000/api/shop/cart/${userId}/${productId}${
+        `https://marry-matha-karupatti.onrender.com/api/shop/cart/${userId}/${productId}${
           packing ? `?packing=${packing.size}` : ""
         }`
       );
@@ -85,7 +85,7 @@ export const updateCartQuantity = createAsyncThunk(
     // If user is authenticated, use API
     if (userId) {
       const response = await axios.put(
-        "http://localhost:5000/api/shop/cart/update-cart",
+        "https://marry-matha-karupatti.onrender.com/api/shop/cart/update-cart",
         {
           userId,
           productId,

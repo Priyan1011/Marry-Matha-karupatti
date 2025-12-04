@@ -27,7 +27,7 @@ function VerifyEmail() {
 
       try {
         const response = await fetch(
-          "http://localhost:5000/api/auth/verify-email",
+          "https://marry-matha-karupatti.onrender.com/api/auth/verify-email",
           {
             method: "POST",
             headers: {

@@ -87,7 +87,7 @@ Please confirm order & share payment details! 🙏
   const saveWhatsappOrderToDatabase = async () => {
     try {
       // ✅ FIX: Use import.meta.env for Vite
-      const apiUrl = import.meta.env.VITE_API_URL || "http://localhost:5000";
+      const apiUrl = import.meta.env.VITE_API_URL || "https://marry-matha-karupatti.onrender.com";
 
       const whatsappOrderData = {
         userId: user?.id,

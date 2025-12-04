@@ -22,6 +22,14 @@ import { Skeleton } from "@/components/ui/skeleton";
 import PaypalReturnPage from "./pages/shopping-view/paypal-return";
 import PaymentSuccessPage from "./pages/shopping-view/payment-success";
 import SearchProducts from "./pages/shopping-view/search";
+import PackingDetail from "./pages/shopping-view/PackingDetail";
+import AboutUs from "./pages/shopping-view/AboutUs";
+import Contact from "./pages/shopping-view/Contact";
+import VerifyEmail from "@/pages/auth/verify-email";
+import GoogleSuccess from "@/pages/auth/google-success";
+import PrivacyPolicy from './components/common/PrivacyPolicy';
+import TermsConditions from './components/common/TermsConditions';
+import OrderSuccessPage from "./pages/shopping-view/order-success";
 
 function App() {
   const { user, isAuthenticated, isLoading } = useSelector(
@@ -35,8 +43,6 @@ function App() {
 
   if (isLoading) return <Skeleton className="w-[800] bg-black h-[600px]" />;
 
-  console.log(isLoading, user);
-
   return (
     <div className="flex flex-col overflow-hidden bg-white">
       <Routes>
@@ -49,6 +55,11 @@ function App() {
             ></CheckAuth>
           }
         />
+        
+        {/* Google OAuth Success Route */}
+        <Route path="/auth/google-success" element={<GoogleSuccess />} />
+        
+        {/* Regular Auth Routes */}
         <Route
           path="/auth"
           element={
@@ -59,7 +70,10 @@ function App() {
         >
           <Route path="login" element={<AuthLogin />} />
           <Route path="register" element={<AuthRegister />} />
+          <Route path="verify-email" element={<VerifyEmail />} />
         </Route>
+        
+        {/* Admin Routes */}
         <Route
           path="/admin"
           element={
@@ -73,6 +87,8 @@ function App() {
           <Route path="orders" element={<AdminOrders />} />
           <Route path="features" element={<AdminFeatures />} />
         </Route>
+        
+        {/* Shop Routes */}
         <Route
           path="/shop"
           element={
@@ -88,7 +104,32 @@ function App() {
           <Route path="paypal-return" element={<PaypalReturnPage />} />
           <Route path="payment-success" element={<PaymentSuccessPage />} />
           <Route path="search" element={<SearchProducts />} />
+          <Route path="about" element={<AboutUs />} />
+          <Route path="contact" element={<Contact />} />
+          <Route path="packing/:packingId" element={<PackingDetail />} />
+          <Route path="order-success" element={<OrderSuccessPage />} />
+          {/* Removed PrivacyPolicy and TermsConditions from here */}
         </Route>
+        
+        {/* Legal Pages - Root Level */}
+        <Route 
+          path="/privacy-policy" 
+          element={
+            <CheckAuth isAuthenticated={isAuthenticated} user={user}>
+              <PrivacyPolicy />
+            </CheckAuth>
+          } 
+        />
+        <Route 
+          path="/terms-conditions" 
+          element={
+            <CheckAuth isAuthenticated={isAuthenticated} user={user}>
+              <TermsConditions />
+            </CheckAuth>
+          } 
+        />
+        
+        {/* Other Routes */}
         <Route path="/unauth-page" element={<UnauthPage />} />
         <Route path="*" element={<NotFound />} />
       </Routes>

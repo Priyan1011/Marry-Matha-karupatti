@@ -43,11 +43,12 @@ function ShoppingListing() {
     (state) => state.shopProducts
   );
   const { cartItems } = useSelector((state) => state.shopCart);
-  const { user } = useSelector((state) => state.auth);
+  const { user, isAuthenticated } = useSelector((state) => state.auth);
   const [filters, setFilters] = useState({});
   const [sort, setSort] = useState(null);
   const [searchParams, setSearchParams] = useSearchParams();
   const [openDetailsDialog, setOpenDetailsDialog] = useState(false);
+
   const { toast } = useToast();
 
   const categorySearchParam = searchParams.get("category");
@@ -58,7 +59,8 @@ function ShoppingListing() {
 
   function handleFilter(getSectionId, getCurrentOption) {
     let cpyFilters = { ...filters };
-    const indexOfCurrentSection = Object.keys(cpyFilters).indexOf(getSectionId);
+    const indexOfCurrentSection =
+      Object.keys(cpyFilters).indexOf(getSectionId);
 
     if (indexOfCurrentSection === -1) {
       cpyFilters = {
@@ -83,13 +85,15 @@ function ShoppingListing() {
     dispatch(fetchProductDetails(getCurrentProductId));
   }
 
-  function handleAddtoCart(getCurrentProductId, getTotalStock) {
+  function handleAddtoCart(getCurrentProductId, getTotalStock, packing = null) {
     console.log(cartItems);
     let getCartItems = cartItems.items || [];
 
     if (getCartItems.length) {
       const indexOfCurrentItem = getCartItems.findIndex(
-        (item) => item.productId === getCurrentProductId
+        (item) => 
+          item.productId === getCurrentProductId &&
+          JSON.stringify(item.packing) === JSON.stringify(packing)
       );
       if (indexOfCurrentItem > -1) {
         const getQuantity = getCartItems[indexOfCurrentItem].quantity;
@@ -106,13 +110,14 @@ function ShoppingListing() {
 
     dispatch(
       addToCart({
-        userId: user?.id,
+        userId: user?.id, // This can be null for guest users
         productId: getCurrentProductId,
         quantity: 1,
+        packing: packing,
       })
     ).then((data) => {
       if (data?.payload?.success) {
-        dispatch(fetchCartItems(user?.id));
+        dispatch(fetchCartItems(user?.id)); // This will handle both guest and auth users
         toast({
           title: "Product is added to cart",
         });
@@ -146,13 +151,22 @@ function ShoppingListing() {
   console.log(productList, "productListproductListproductList");
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-[200px_1fr] gap-6 p-4 md:p-6">
+    // ✨ Updated: Karupatti cream background + serif fonts
+    <div className="grid grid-cols-1 md:grid-cols-[280px_1fr] gap-6 p-4 md:p-6 bg-karupatti-cream min-h-screen">
+      {/* Filter Section */}
       <ProductFilter filters={filters} handleFilter={handleFilter} />
-      <div className="bg-background w-full rounded-lg shadow-sm">
-        <div className="p-4 border-b flex items-center justify-between">
-          <h2 className="text-lg font-extrabold">All Products</h2>
+
+      {/* Products Section */}
+      <div className="bg-karupatti-cream w-full">
+        {/* Header */}
+        <div className="p-4 border-b bg-white rounded-lg shadow-sm mb-6 flex items-center justify-between">
+          <h1 className="text-2xl font-serif font-bold text-karupatti-brownDark">
+            All Products
+          </h1>
+
+          {/* Sort Dropdown */}
           <div className="flex items-center gap-3">
-            <span className="text-muted-foreground">
+            <span className="text-base font-serif text-karupatti-brown">
               {productList?.length} Products
             </span>
             <DropdownMenu>
@@ -160,10 +174,10 @@ function ShoppingListing() {
                 <Button
                   variant="outline"
                   size="sm"
-                  className="flex items-center gap-1"
+                  className="flex items-center gap-2 font-serif"
                 >
                   <ArrowUpDownIcon className="h-4 w-4" />
-                  <span>Sort by</span>
+                  <span className="text-sm">Sort by</span>
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end" className="w-[200px]">
@@ -172,6 +186,7 @@ function ShoppingListing() {
                     <DropdownMenuRadioItem
                       value={sortItem.id}
                       key={sortItem.id}
+                      className="font-serif"
                     >
                       {sortItem.label}
                     </DropdownMenuRadioItem>
@@ -181,18 +196,22 @@ function ShoppingListing() {
             </DropdownMenu>
           </div>
         </div>
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 p-4">
+
+        {/* Product Grid */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
           {productList && productList.length > 0
             ? productList.map((productItem) => (
                 <ShoppingProductTile
                   handleGetProductDetails={handleGetProductDetails}
                   product={productItem}
                   handleAddtoCart={handleAddtoCart}
+                  key={productItem._id}
                 />
               ))
             : null}
         </div>
       </div>
+
       <ProductDetailsDialog
         open={openDetailsDialog}
         setOpen={setOpenDetailsDialog}

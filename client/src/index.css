@@ -1,7 +1,20 @@
+/* ====== ALL IMPORTS MUST BE AT THE VERY TOP ====== */
+@import url('https://fonts.googleapis.com/css2?family=Merriweather:wght@700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+Tamil:wght@300;400;500;600;700;800&display=swap');
+
+/* ====== TAILWIND DIRECTIVES ====== */
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
+/* ====== GLOBAL ZOOM FIX ====== */
+@media (min-width: 1024px) {
+  html {
+    font-size: 14px; /* ~87.5% of 16px */
+  }
+}
+
+/* ====== TAILWIND LAYERS ====== */
 @layer base {
   :root {
     --background: 0 0% 100%;
@@ -66,4 +79,9 @@
   body {
     @apply bg-background text-foreground;
   }
+}
+
+/* ====== TAMIL FONT CLASS ====== */
+.font-tamil {
+  font-family: 'Noto Sans Tamil', sans-serif;
 }

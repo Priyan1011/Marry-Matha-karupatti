@@ -21,14 +21,15 @@ function CommonForm({
   function renderInputsByComponentType(getControlItem) {
     let element = null;
     const value = formData[getControlItem.name] || "";
+    const inputId = `form-${getControlItem.name}`; // Generate unique ID
 
     switch (getControlItem.componentType) {
       case "input":
         element = (
           <Input
+            id={inputId}
             name={getControlItem.name}
             placeholder={getControlItem.placeholder}
-            id={getControlItem.name}
             type={getControlItem.type}
             value={value}
             onChange={(event) =>
@@ -39,11 +40,12 @@ function CommonForm({
             }
           />
         );
-
         break;
+
       case "select":
         element = (
           <Select
+            id={inputId}
             onValueChange={(value) =>
               setFormData({
                 ...formData,
@@ -53,7 +55,7 @@ function CommonForm({
             value={value}
           >
             <SelectTrigger className="w-full">
-              <SelectValue placeholder={getControlItem.label} />
+              <SelectValue placeholder={getControlItem.placeholder} />
             </SelectTrigger>
             <SelectContent>
               {getControlItem.options && getControlItem.options.length > 0
@@ -66,14 +68,14 @@ function CommonForm({
             </SelectContent>
           </Select>
         );
-
         break;
+
       case "textarea":
         element = (
           <Textarea
+            id={inputId}
             name={getControlItem.name}
             placeholder={getControlItem.placeholder}
-            id={getControlItem.id}
             value={value}
             onChange={(event) =>
               setFormData({
@@ -83,15 +85,14 @@ function CommonForm({
             }
           />
         );
-
         break;
 
       default:
         element = (
           <Input
+            id={inputId}
             name={getControlItem.name}
             placeholder={getControlItem.placeholder}
-            id={getControlItem.name}
             type={getControlItem.type}
             value={value}
             onChange={(event) =>
@@ -113,7 +114,9 @@ function CommonForm({
       <div className="flex flex-col gap-3">
         {formControls.map((controlItem) => (
           <div className="grid w-full gap-1.5" key={controlItem.name}>
-            <Label className="mb-1">{controlItem.label}</Label>
+            <Label htmlFor={`form-${controlItem.name}`}>
+              {controlItem.label}
+            </Label>
             {renderInputsByComponentType(controlItem)}
           </div>
         ))}

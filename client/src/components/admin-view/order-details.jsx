@@ -1,6 +1,10 @@
 import { useState } from "react";
 import CommonForm from "../common/form";
-import { DialogContent } from "../ui/dialog";
+import {
+  DialogContent,
+  DialogTitle,
+  DialogDescription,
+} from "../ui/dialog";
 import { Label } from "../ui/label";
 import { Separator } from "../ui/separator";
 import { Badge } from "../ui/badge";
@@ -22,8 +26,6 @@ function AdminOrderDetailsView({ orderDetails }) {
   const dispatch = useDispatch();
   const { toast } = useToast();
 
-  console.log(orderDetails, "orderDetailsorderDetails");
-
   function handleUpdateStatus(event) {
     event.preventDefault();
     const { status } = formData;
@@ -42,80 +44,127 @@ function AdminOrderDetailsView({ orderDetails }) {
     });
   }
 
+  if (!orderDetails) return null;
+
   return (
-    <DialogContent className="sm:max-w-[600px]">
+    <DialogContent className="max-w-2xl max-h-[90vh] overflow-auto">
+      {/* Hidden title/description for accessibility */}
+      <DialogTitle className="sr-only">
+        Order {orderDetails?._id}
+      </DialogTitle>
+      <DialogDescription className="sr-only">
+        Order details and status update form
+      </DialogDescription>
+
       <div className="grid gap-6">
         <div className="grid gap-2">
-          <div className="flex mt-6 items-center justify-between">
-            <p className="font-medium">Order ID</p>
-            <Label>{orderDetails?._id}</Label>
-          </div>
-          <div className="flex mt-2 items-center justify-between">
-            <p className="font-medium">Order Date</p>
-            <Label>{orderDetails?.orderDate.split("T")[0]}</Label>
-          </div>
-          <div className="flex mt-2 items-center justify-between">
-            <p className="font-medium">Order Price</p>
-            <Label>${orderDetails?.totalAmount}</Label>
-          </div>
-          <div className="flex mt-2 items-center justify-between">
-            <p className="font-medium">Payment method</p>
-            <Label>{orderDetails?.paymentMethod}</Label>
-          </div>
-          <div className="flex mt-2 items-center justify-between">
-            <p className="font-medium">Payment Status</p>
-            <Label>{orderDetails?.paymentStatus}</Label>
-          </div>
-          <div className="flex mt-2 items-center justify-between">
-            <p className="font-medium">Order Status</p>
-            <Label>
-              <Badge
-                className={`py-1 px-3 ${
-                  orderDetails?.orderStatus === "confirmed"
-                    ? "bg-green-500"
-                    : orderDetails?.orderStatus === "rejected"
-                    ? "bg-red-600"
-                    : "bg-black"
-                }`}
-              >
-                {orderDetails?.orderStatus}
-              </Badge>
-            </Label>
-          </div>
-        </div>
-        <Separator />
-        <div className="grid gap-4">
-          <div className="grid gap-2">
-            <div className="font-medium">Order Details</div>
-            <ul className="grid gap-3">
-              {orderDetails?.cartItems && orderDetails?.cartItems.length > 0
-                ? orderDetails?.cartItems.map((item) => (
-                    <li className="flex items-center justify-between">
-                      <span>Title: {item.title}</span>
-                      <span>Quantity: {item.quantity}</span>
-                      <span>Price: ${item.price}</span>
-                    </li>
-                  ))
-                : null}
-            </ul>
-          </div>
-        </div>
-        <div className="grid gap-4">
-          <div className="grid gap-2">
-            <div className="font-medium">Shipping Info</div>
-            <div className="grid gap-0.5 text-muted-foreground">
-              <span>{user.userName}</span>
-              <span>{orderDetails?.addressInfo?.address}</span>
-              <span>{orderDetails?.addressInfo?.city}</span>
-              <span>{orderDetails?.addressInfo?.pincode}</span>
-              <span>{orderDetails?.addressInfo?.phone}</span>
-              <span>{orderDetails?.addressInfo?.notes}</span>
+          <div className="flex justify-between items-start">
+            <div>
+              <p className="text-sm font-medium">Order ID</p>
+              <p className="text-lg font-semibold">
+                {orderDetails?._id}
+              </p>
             </div>
+            <Badge>{orderDetails?.orderStatus}</Badge>
+          </div>
+          <Separator />
+        </div>
+
+        <div className="grid grid-cols-2 gap-4">
+          <div className="grid gap-2">
+            <Label className="text-base">Order Date</Label>
+            <p className="text-sm">
+              {orderDetails?.orderDate.split("T")[0]}
+            </p>
+          </div>
+          <div className="grid gap-2">
+            <Label className="text-base">Order Price</Label>
+            <p className="text-sm font-semibold">
+              ${orderDetails?.totalAmount}
+            </p>
+          </div>
+          <div className="grid gap-2">
+            <Label className="text-base">Payment Method</Label>
+            <p className="text-sm">
+              {orderDetails?.paymentMethod}
+            </p>
+          </div>
+          <div className="grid gap-2">
+            <Label className="text-base">Payment Status</Label>
+            <Badge variant="outline">
+              {orderDetails?.paymentStatus}
+            </Badge>
           </div>
         </div>
 
-        <div>
+        <Separator />
+
+        <div className="grid gap-2">
+          <Label className="text-base font-semibold">Order Details</Label>
+          <div className="max-h-48 overflow-auto">
+            {orderDetails?.cartItems && orderDetails?.cartItems.length > 0
+              ? orderDetails?.cartItems.map((item, index) => (
+                  <div key={index} className="flex justify-between mb-2 p-2 border-b">
+                    <div>
+                      <p className="font-medium">{item.title}</p>
+                      <p className="text-sm text-gray-600">
+                        Qty: {item.quantity}
+                      </p>
+                    </div>
+                    <p className="font-semibold">${item.price}</p>
+                  </div>
+                ))
+              : null}
+          </div>
+        </div>
+
+        <Separator />
+
+        <div className="grid gap-2">
+          <Label className="text-base font-semibold">
+            Shipping Info
+          </Label>
+          <div className="text-sm space-y-1">
+            <p>
+              <span className="font-medium">Name:</span>{" "}
+              {user.userName}
+            </p>
+            <p>
+              <span className="font-medium">Address:</span>{" "}
+              {orderDetails?.addressInfo?.address}
+            </p>
+            <p>
+              <span className="font-medium">City:</span>{" "}
+              {orderDetails?.addressInfo?.city}
+            </p>
+            <p>
+              <span className="font-medium">Pincode:</span>{" "}
+              {orderDetails?.addressInfo?.pincode}
+            </p>
+            <p>
+              <span className="font-medium">Phone:</span>{" "}
+              {orderDetails?.addressInfo?.phone}
+            </p>
+            {orderDetails?.addressInfo?.notes && (
+              <p>
+                <span className="font-medium">Notes:</span>{" "}
+                {orderDetails?.addressInfo?.notes}
+              </p>
+            )}
+          </div>
+        </div>
+
+        <Separator />
+
+        <div className="grid gap-4">
+          <Label className="text-base font-semibold">
+            Update Order Status
+          </Label>
           <CommonForm
+            onSubmit={handleUpdateStatus}
+            formData={formData}
+            setFormData={setFormData}
+            buttonText="Update Status"
             formControls={[
               {
                 label: "Order Status",
@@ -130,10 +179,7 @@ function AdminOrderDetailsView({ orderDetails }) {
                 ],
               },
             ]}
-            formData={formData}
-            setFormData={setFormData}
-            buttonText={"Update Order Status"}
-            onSubmit={handleUpdateStatus}
+            isBtnDisabled={!formData.status}
           />
         </div>
       </div>

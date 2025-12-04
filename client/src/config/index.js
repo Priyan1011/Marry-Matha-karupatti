@@ -58,11 +58,11 @@ export const addProductFormElements = [
     name: "category",
     componentType: "select",
     options: [
-      { id: "men", label: "Men" },
-      { id: "women", label: "Women" },
-      { id: "kids", label: "Kids" },
-      { id: "accessories", label: "Accessories" },
-      { id: "footwear", label: "Footwear" },
+      { id: "handcrafted", label: "Handcrafted" },
+      { id: "block", label: "Palm Jaggery" },
+      { id: "kalkandu", label: "Palm Kalkandu" },
+      { id: "powder", label: "Powder" },
+      { id: "syrup", label: "Syrup" },
     ],
   },
   {
@@ -70,12 +70,9 @@ export const addProductFormElements = [
     name: "brand",
     componentType: "select",
     options: [
-      { id: "nike", label: "Nike" },
-      { id: "adidas", label: "Adidas" },
-      { id: "puma", label: "Puma" },
-      { id: "levi", label: "Levi's" },
-      { id: "zara", label: "Zara" },
-      { id: "h&m", label: "H&M" },
+      { id: "marry-matha", label: "Marry Matha" },
+      { id: "organic", label: "Organic" },
+      { id: "traditional", label: "Traditional" },
     ],
   },
   {
@@ -101,6 +98,7 @@ export const addProductFormElements = [
   },
 ];
 
+// ✨ UPDATED: Navigation menu (Home, Products, About Us, Contact, Search)
 export const shoppingViewHeaderMenuItems = [
   {
     id: "home",
@@ -113,29 +111,14 @@ export const shoppingViewHeaderMenuItems = [
     path: "/shop/listing",
   },
   {
-    id: "men",
-    label: "Men",
-    path: "/shop/listing",
+    id: "about",
+    label: "About Us",
+    path: "/shop/about",
   },
   {
-    id: "women",
-    label: "Women",
-    path: "/shop/listing",
-  },
-  {
-    id: "kids",
-    label: "Kids",
-    path: "/shop/listing",
-  },
-  {
-    id: "footwear",
-    label: "Footwear",
-    path: "/shop/listing",
-  },
-  {
-    id: "accessories",
-    label: "Accessories",
-    path: "/shop/listing",
+    id: "contact",
+    label: "Contact",
+    path: "/shop/contact",
   },
   {
     id: "search",
@@ -145,37 +128,31 @@ export const shoppingViewHeaderMenuItems = [
 ];
 
 export const categoryOptionsMap = {
-  men: "Men",
-  women: "Women",
-  kids: "Kids",
-  accessories: "Accessories",
-  footwear: "Footwear",
+  handcrafted: "Handcrafted",
+  block: "Palm Jaggery",
+  kalkandu: "Palm Kalkandu",
+  powder: "Powder",
+  syrup: "Syrup",
 };
 
 export const brandOptionsMap = {
-  nike: "Nike",
-  adidas: "Adidas",
-  puma: "Puma",
-  levi: "Levi",
-  zara: "Zara",
-  "h&m": "H&M",
+  "marry-matha": "Marry Matha",
+  organic: "Organic",
+  traditional: "Traditional",
 };
 
 export const filterOptions = {
   category: [
-    { id: "men", label: "Men" },
-    { id: "women", label: "Women" },
-    { id: "kids", label: "Kids" },
-    { id: "accessories", label: "Accessories" },
-    { id: "footwear", label: "Footwear" },
+    { id: "handcrafted", label: "Handcrafted" },
+    { id: "block", label: "Palm Jaggery" },
+    { id: "kalkandu", label: "Palm Kalkandu" },
+    { id: "powder", label: "Powder" },
+    { id: "syrup", label: "Syrup" },
   ],
   brand: [
-    { id: "nike", label: "Nike" },
-    { id: "adidas", label: "Adidas" },
-    { id: "puma", label: "Puma" },
-    { id: "levi", label: "Levi's" },
-    { id: "zara", label: "Zara" },
-    { id: "h&m", label: "H&M" },
+    { id: "marry-matha", label: "Marry Matha" },
+    { id: "organic", label: "Organic" },
+    { id: "traditional", label: "Traditional" },
   ],
 };
 

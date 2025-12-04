@@ -1,23 +1,5 @@
 import { Button } from "@/components/ui/button";
-import bannerOne from "../../assets/banner-1.webp";
-import bannerTwo from "../../assets/banner-2.webp";
-import bannerThree from "../../assets/banner-3.webp";
-import {
-  Airplay,
-  BabyIcon,
-  ChevronLeftIcon,
-  ChevronRightIcon,
-  CloudLightning,
-  Heater,
-  Images,
-  Shirt,
-  ShirtIcon,
-  ShoppingBasket,
-  UmbrellaIcon,
-  WashingMachine,
-  WatchIcon,
-} from "lucide-react";
-import { Card, CardContent } from "@/components/ui/card";
+import { ChevronLeftIcon, ChevronRightIcon } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import {
@@ -30,23 +12,17 @@ import { addToCart, fetchCartItems } from "@/store/shop/cart-slice";
 import { useToast } from "@/components/ui/use-toast";
 import ProductDetailsDialog from "@/components/shopping-view/product-details";
 import { getFeatureImages } from "@/store/common-slice";
+import { packingMethods } from "@/data/packing";
 
-const categoriesWithIcon = [
-  { id: "men", label: "Men", icon: ShirtIcon },
-  { id: "women", label: "Women", icon: CloudLightning },
-  { id: "kids", label: "Kids", icon: BabyIcon },
-  { id: "accessories", label: "Accessories", icon: WatchIcon },
-  { id: "footwear", label: "Footwear", icon: UmbrellaIcon },
+// Category data with real product images
+const categoriesWithImage = [
+  { id: "handcrafted", label: "Handcrafted", image: "/images/Palm Handcrafted.jpg" },
+  { id: "block", label: "Palm Jaggery", image: "/images/palm jaggery.jpg" },
+  { id: "kalkandu", label: "Palm Kalkandu", image: "/images/plam kalkandu.jpg" },
+  { id: "powder", label: "Powder", image: "/images/powders.png" },
+  { id: "syrup", label: "Syrup", image: "/images/syrup.jpg" },
 ];
 
-const brandsWithIcon = [
-  { id: "nike", label: "Nike", icon: Shirt },
-  { id: "adidas", label: "Adidas", icon: WashingMachine },
-  { id: "puma", label: "Puma", icon: ShoppingBasket },
-  { id: "levi", label: "Levi's", icon: Airplay },
-  { id: "zara", label: "Zara", icon: Images },
-  { id: "h&m", label: "H&M", icon: Heater },
-];
 function ShoppingHome() {
   const [currentSlide, setCurrentSlide] = useState(0);
   const { productList, productDetails } = useSelector(
@@ -114,15 +90,14 @@ function ShoppingHome() {
     );
   }, [dispatch]);
 
-  console.log(productList, "productList");
-
   useEffect(() => {
     dispatch(getFeatureImages());
   }, [dispatch]);
 
   return (
-    <div className="flex flex-col min-h-screen">
-      <div className="relative w-full h-[600px] overflow-hidden">
+    <div className="flex flex-col min-h-screen bg-karupatti-cream">
+      {/* Hero/Banner Section - Mobile responsive */}
+      <div className="relative w-full h-[300px] sm:h-[400px] md:h-[600px] overflow-hidden bg-gradient-to-b from-karupatti-creamDark to-karupatti-cream">
         {featureImageList && featureImageList.length > 0
           ? featureImageList.map((slide, index) => (
               <img
@@ -131,9 +106,11 @@ function ShoppingHome() {
                 className={`${
                   index === currentSlide ? "opacity-100" : "opacity-0"
                 } absolute top-0 left-0 w-full h-full object-cover transition-opacity duration-1000`}
+                alt={`Banner ${index + 1}`}
               />
             ))
           : null}
+        {/* Navigation buttons - hidden on very small screens */}
         <Button
           variant="outline"
           size="icon"
@@ -144,7 +121,7 @@ function ShoppingHome() {
                 featureImageList.length
             )
           }
-          className="absolute top-1/2 left-4 transform -translate-y-1/2 bg-white/80"
+          className="absolute top-1/2 left-2 sm:left-4 transform -translate-y-1/2 bg-karupatti-white/90 hover:bg-karupatti-accent hover:text-white border-karupatti-border transition-all hidden xs:flex"
         >
           <ChevronLeftIcon className="w-4 h-4" />
         </Button>
@@ -156,62 +133,87 @@ function ShoppingHome() {
               (prevSlide) => (prevSlide + 1) % featureImageList.length
             )
           }
-          className="absolute top-1/2 right-4 transform -translate-y-1/2 bg-white/80"
+          className="absolute top-1/2 right-2 sm:right-4 transform -translate-y-1/2 bg-karupatti-white/90 hover:bg-karupatti-accent hover:text-white border-karupatti-border transition-all hidden xs:flex"
         >
           <ChevronRightIcon className="w-4 h-4" />
         </Button>
       </div>
-      <section className="py-12 bg-gray-50">
-        <div className="container mx-auto px-4">
-          <h2 className="text-3xl font-bold text-center mb-8">
-            Shop by category
+      
+      {/* Shop by Category - Mobile responsive */}
+      <section className="py-8 sm:py-10 md:py-12 bg-karupatti-creamDark">
+        <div className="container mx-auto px-3 sm:px-4">
+          <h2 className="text-2xl sm:text-3xl md:text-4xl font-serif font-bold text-center mb-6 sm:mb-8 text-karupatti-brownDark tracking-tight">
+            Shop by Category
           </h2>
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
-            {categoriesWithIcon.map((categoryItem) => (
-              <Card
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-3 lg:grid-cols-5 gap-4 sm:gap-6 md:gap-8 lg:gap-12">
+            {categoriesWithImage.map((categoryItem) => (
+              <div
+                key={categoryItem.id}
                 onClick={() =>
                   handleNavigateToListingPage(categoryItem, "category")
                 }
-                className="cursor-pointer hover:shadow-lg transition-shadow"
+                className="cursor-pointer group"
               >
-                <CardContent className="flex flex-col items-center justify-center p-6">
-                  <categoryItem.icon className="w-12 h-12 mb-4 text-primary" />
-                  <span className="font-bold">{categoryItem.label}</span>
-                </CardContent>
-              </Card>
+                <div className="flex flex-col items-center">
+                  <div className="w-28 h-28 sm:w-36 sm:h-36 md:w-44 md:h-44 lg:w-56 lg:h-56 rounded-full shadow-lg mb-2 sm:mb-3 md:mb-4 overflow-hidden bg-white border-2 border-karupatti-border group-hover:border-karupatti-accent transition-all duration-300 group-hover:shadow-xl">
+                    <img 
+                      src={categoryItem.image} 
+                      alt={categoryItem.label} 
+                      className="object-cover w-full h-full group-hover:scale-110 transition-transform duration-300"
+                    />
+                  </div>
+                  <span className="font-bold text-karupatti-brown text-center text-sm sm:text-base md:text-lg lg:text-xl group-hover:text-karupatti-accent transition-colors px-1">
+                    {categoryItem.label}
+                  </span>
+                </div>
+              </div>
             ))}
           </div>
         </div>
       </section>
 
-      <section className="py-12 bg-gray-50">
-        <div className="container mx-auto px-4">
-          <h2 className="text-3xl font-bold text-center mb-8">Shop by Brand</h2>
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
-            {brandsWithIcon.map((brandItem) => (
-              <Card
-                onClick={() => handleNavigateToListingPage(brandItem, "brand")}
-                className="cursor-pointer hover:shadow-lg transition-shadow"
+      {/* Shop by Packing - Mobile responsive */}
+      <section className="py-8 sm:py-10 md:py-12 bg-karupatti-cream">
+        <div className="container mx-auto px-3 sm:px-4">
+          <h2 className="text-2xl sm:text-3xl md:text-4xl font-serif font-bold text-center mb-6 sm:mb-8 text-karupatti-brownDark tracking-tight">
+            Shop by Packing
+          </h2>
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-3 lg:grid-cols-5 gap-4 sm:gap-6 md:gap-8 lg:gap-12">
+            {packingMethods.map((packItem) => (
+              <div
+                key={packItem.id}
+                onClick={() => navigate(`/shop/packing/${packItem.id}`)}
+                className="cursor-pointer group"
               >
-                <CardContent className="flex flex-col items-center justify-center p-6">
-                  <brandItem.icon className="w-12 h-12 mb-4 text-primary" />
-                  <span className="font-bold">{brandItem.label}</span>
-                </CardContent>
-              </Card>
+                <div className="flex flex-col items-center">
+                  <div className="w-28 h-28 sm:w-36 sm:h-36 md:w-44 md:h-44 lg:w-56 lg:h-56 rounded-full shadow-lg mb-2 sm:mb-3 md:mb-4 overflow-hidden bg-white border-2 border-karupatti-border group-hover:border-karupatti-accent transition-all duration-300 group-hover:shadow-xl">
+                    <img 
+                      src={packItem.image} 
+                      alt={packItem.label} 
+                      className="object-cover w-full h-full group-hover:scale-110 transition-transform duration-300"
+                    />
+                  </div>
+                  <span className="font-bold text-karupatti-brown text-center text-sm sm:text-base md:text-lg lg:text-xl group-hover:text-karupatti-accent transition-colors px-1">
+                    {packItem.label}
+                  </span>
+                </div>
+              </div>
             ))}
           </div>
         </div>
       </section>
 
-      <section className="py-12">
-        <div className="container mx-auto px-4">
-          <h2 className="text-3xl font-bold text-center mb-8">
+      {/* Feature Products Section - Mobile responsive */}
+      <section className="py-8 sm:py-10 md:py-12 bg-karupatti-creamDark">
+        <div className="container mx-auto px-3 sm:px-4">
+          <h2 className="text-2xl sm:text-3xl md:text-4xl font-serif font-bold text-center mb-6 sm:mb-8 text-karupatti-brownDark tracking-tight">
             Feature Products
           </h2>
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+          <div className="grid grid-cols-1 xs:grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 sm:gap-5 md:gap-6">
             {productList && productList.length > 0
               ? productList.map((productItem) => (
                   <ShoppingProductTile
+                    key={productItem?._id}
                     handleGetProductDetails={handleGetProductDetails}
                     product={productItem}
                     handleAddtoCart={handleAddtoCart}

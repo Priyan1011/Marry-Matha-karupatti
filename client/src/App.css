@@ -1,3 +1,8 @@
+/* App.css - if you want to add styles here too */
+.font-tamil {
+  font-family: 'Noto Sans Tamil', sans-serif;
+}
+
 #root {
   max-width: 1280px;
   margin: 0 auto;

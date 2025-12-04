@@ -7,10 +7,10 @@ import store from "./store/store.js";
 import { Toaster } from "./components/ui/toaster.jsx";
 
 createRoot(document.getElementById("root")).render(
-  <BrowserRouter>
-    <Provider store={store}>
+  <Provider store={store}>
+    <BrowserRouter>
       <App />
-      <Toaster />
-    </Provider>
-  </BrowserRouter>
+    </BrowserRouter>
+    <Toaster />
+  </Provider>
 );

@@ -4,6 +4,7 @@ const User = require("../../models/User");
 const nodemailer = require("nodemailer");
 
 // ============= CONFIGURATION =============
+
 const validatePassword = (password) => {
   // At least 8 chars, 1 uppercase, 1 lowercase, 1 number
   const regex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).{8,}$/;
@@ -17,14 +18,43 @@ const validateEmail = (email) => {
 
 // Email verification token utility
 const generateVerificationToken = () => {
-  return Math.random().toString(36).substring(2, 15) + 
-         Math.random().toString(36).substring(2, 15);
+  return (
+    Math.random().toString(36).substring(2, 15) +
+    Math.random().toString(36).substring(2, 15)
+  );
+};
+
+// ============= HELPER: DYNAMIC COOKIE OPTIONS =============
+// NEW: This helper function creates cookies with correct domain for production/dev
+
+const getCookieOptions = () => {
+  const isProduction = process.env.NODE_ENV === "production";
+  const frontendUrl = process.env.FRONTEND_URL || "http://localhost:5173";
+
+  // Extract domain from frontend URL
+  let domain = "localhost";
+  if (isProduction) {
+    try {
+      const url = new URL(frontendUrl);
+      domain = url.hostname; // e.g., marry-matha-karupatti-1.onrender.com
+    } catch (error) {
+      console.warn("Invalid FRONTEND_URL, using default domain", error);
+      domain = "localhost";
+    }
+  }
+
+  return {
+    httpOnly: true,
+    secure: isProduction, // true in production (HTTPS only)
+    sameSite: isProduction ? "none" : "lax", // "none" for cross-site in production
+    domain: domain,
+  };
 };
 
 // ============= SEND VERIFICATION EMAIL =============
+
 const sendVerificationEmail = async (email, verificationToken) => {
   try {
-    // Configure your email service here (Gmail, SendGrid, etc.)
     const transporter = nodemailer.createTransport({
       service: process.env.EMAIL_SERVICE || "gmail",
       auth: {
@@ -40,11 +70,8 @@ const sendVerificationEmail = async (email, verificationToken) => {
       to: email,
       subject: "Verify Your Karupatti Shop Account",
       html: `
-        <h2>Welcome to Karupatti Shop!</h2>
         <p>Please verify your email by clicking the link below:</p>
-        <a href="${verificationUrl}" style="padding: 10px 20px; background: #208080; color: white; text-decoration: none; border-radius: 5px;">
-          Verify Email
-        </a>
+        <a href="${verificationUrl}">Verify Email</a>
         <p>Or copy and paste this link:</p>
         <p>${verificationUrl}</p>
         <p>This link expires in 24 hours.</p>
@@ -61,6 +88,7 @@ const sendVerificationEmail = async (email, verificationToken) => {
 };
 
 // ============= SEND PASSWORD RESET EMAIL =============
+
 const sendPasswordResetEmail = async (email, resetToken) => {
   try {
     const transporter = nodemailer.createTransport({
@@ -78,11 +106,8 @@ const sendPasswordResetEmail = async (email, resetToken) => {
       to: email,
       subject: "Reset Your Karupatti Shop Password",
       html: `
-        <h2>Password Reset Request</h2>
         <p>You requested to reset your password. Click the link below:</p>
-        <a href="${resetUrl}" style="padding: 10px 20px; background: #208080; color: white; text-decoration: none; border-radius: 5px;">
-          Reset Password
-        </a>
+        <a href="${resetUrl}">Reset Password</a>
         <p>Or copy and paste this link:</p>
         <p>${resetUrl}</p>
         <p>This link expires in 1 hour.</p>
@@ -99,12 +124,15 @@ const sendPasswordResetEmail = async (email, resetToken) => {
 };
 
 // ============= GOOGLE OAUTH CALLBACK =============
+
 const googleAuthCallback = async (req, res) => {
   try {
     const user = req.user;
 
     if (!user) {
-      return res.redirect(`${process.env.FRONTEND_URL}/auth/login?error=google_auth_failed`);
+      return res.redirect(
+        `${process.env.FRONTEND_URL}/auth/login?error=google_auth_failed`
+      );
     }
 
     // Generate tokens for Google OAuth user
@@ -133,28 +161,30 @@ const googleAuthCallback = async (req, res) => {
     user.refreshTokens.push(refreshToken);
     await user.save();
 
-    // Set cookies
+    // ✅ NEW: Get dynamic cookie options
+    const cookieOptions = getCookieOptions();
+
+    // Set cookies with dynamic domain
     res
       .cookie("accessToken", accessToken, {
-        httpOnly: true,
-        secure: process.env.NODE_ENV === "production",
-        sameSite: "lax", // Changed to lax for OAuth redirects
-        maxAge: 15 * 60 * 1000,
+        ...cookieOptions,
+        maxAge: 15 * 60 * 1000, // 15 minutes
       })
       .cookie("refreshToken", refreshToken, {
-        httpOnly: true,
-        secure: process.env.NODE_ENV === "production",
-        sameSite: "lax",
-        maxAge: 7 * 24 * 60 * 60 * 1000,
+        ...cookieOptions,
+        maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
       })
       .redirect(`${process.env.FRONTEND_URL}/auth/google-success`);
   } catch (error) {
     console.error("Google auth callback error:", error);
-    res.redirect(`${process.env.FRONTEND_URL}/auth/login?error=google_auth_failed`);
+    res.redirect(
+      `${process.env.FRONTEND_URL}/auth/login?error=google_auth_failed`
+    );
   }
 };
 
 // ============= REGISTER USER =============
+
 const registerUser = async (req, res) => {
   const { userName, email, password, confirmPassword } = req.body;
 
@@ -177,7 +207,8 @@ const registerUser = async (req, res) => {
     if (!validatePassword(password)) {
       return res.status(400).json({
         success: false,
-        message: "Password must be at least 8 characters with uppercase, lowercase, and number",
+        message:
+          "Password must be at least 8 characters with uppercase, lowercase, and number",
       });
     }
 
@@ -227,12 +258,12 @@ const registerUser = async (req, res) => {
       await sendVerificationEmail(email, verificationToken);
     } catch (emailError) {
       console.warn("Verification email not sent, but user registered:", emailError);
-      // Don't fail registration if email sending fails
     }
 
     return res.status(201).json({
       success: true,
-      message: "Registration successful! Please check your email to verify your account",
+      message:
+        "Registration successful! Please check your email to verify your account",
     });
   } catch (error) {
     console.error("Registration error:", error);
@@ -244,6 +275,7 @@ const registerUser = async (req, res) => {
 };
 
 // ============= VERIFY EMAIL =============
+
 const verifyEmail = async (req, res) => {
   const { token } = req.body;
 
@@ -256,7 +288,6 @@ const verifyEmail = async (req, res) => {
     }
 
     const user = await User.findOne({ verificationToken: token });
-
     if (!user) {
       return res.status(400).json({
         success: false,
@@ -282,6 +313,7 @@ const verifyEmail = async (req, res) => {
 };
 
 // ============= LOGIN USER =============
+
 const loginUser = async (req, res) => {
   const { email, password } = req.body;
 
@@ -314,7 +346,8 @@ const loginUser = async (req, res) => {
     if (!checkUser.googleId && !checkUser.isEmailVerified) {
       return res.status(403).json({
         success: false,
-        message: "Please verify your email first. Check your inbox for verification link",
+        message:
+          "Please verify your email first. Check your inbox for verification link",
       });
     }
 
@@ -354,18 +387,17 @@ const loginUser = async (req, res) => {
     checkUser.refreshTokens.push(refreshToken);
     await checkUser.save();
 
-    // Set cookies
+    // ✅ NEW: Get dynamic cookie options
+    const cookieOptions = getCookieOptions();
+
+    // Set cookies with dynamic domain
     res
       .cookie("accessToken", accessToken, {
-        httpOnly: true,
-        secure: process.env.NODE_ENV === "production", // true in production
-        sameSite: "strict",
+        ...cookieOptions,
         maxAge: 15 * 60 * 1000, // 15 minutes
       })
       .cookie("refreshToken", refreshToken, {
-        httpOnly: true,
-        secure: process.env.NODE_ENV === "production",
-        sameSite: "strict",
+        ...cookieOptions,
         maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
       });
 
@@ -390,6 +422,7 @@ const loginUser = async (req, res) => {
 };
 
 // ============= REFRESH TOKEN =============
+
 const refreshAccessToken = async (req, res) => {
   const { refreshToken } = req.cookies;
 
@@ -428,11 +461,13 @@ const refreshAccessToken = async (req, res) => {
       { expiresIn: "15m" }
     );
 
+    // ✅ NEW: Get dynamic cookie options
+    const cookieOptions = getCookieOptions();
+
+    // Set new access token cookie
     res.cookie("accessToken", newAccessToken, {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === "production",
-      sameSite: "strict",
-      maxAge: 15 * 60 * 1000,
+      ...cookieOptions,
+      maxAge: 15 * 60 * 1000, // 15 minutes
     });
 
     return res.status(200).json({
@@ -449,6 +484,7 @@ const refreshAccessToken = async (req, res) => {
 };
 
 // ============= FORGOT PASSWORD =============
+
 const forgotPassword = async (req, res) => {
   const { email } = req.body;
 
@@ -476,45 +512,32 @@ const forgotPassword = async (req, res) => {
       });
     }
 
-    // Check if user is Google OAuth user
-    if (user.googleId) {
-      return res.status(400).json({
-        success: false,
-        message: "This email is registered with Google. Please login with Google",
-      });
-    }
-
-    // Generate reset token
-    const resetToken = jwt.sign({ id: user._id }, process.env.ACCESS_TOKEN_SECRET, {
-      expiresIn: "1h",
-    });
-
-    // Store reset token in database
-    user.resetToken = resetToken;
-    user.resetTokenExpiry = Date.now() + 3600000; // 1 hour
+    const resetToken = generateVerificationToken();
+    user.resetPasswordToken = resetToken;
+    user.resetPasswordExpiry = Date.now() + 60 * 60 * 1000; // 1 hour
     await user.save();
 
-    // Send email
     try {
       await sendPasswordResetEmail(email, resetToken);
     } catch (emailError) {
-      console.warn("Password reset email not sent:", emailError);
+      console.warn("Reset email not sent:", emailError);
     }
 
     return res.status(200).json({
       success: true,
-      message: "If email exists, password reset link has been sent",
+      message: "Password reset link has been sent to your email",
     });
   } catch (error) {
     console.error("Forgot password error:", error);
     return res.status(500).json({
       success: false,
-      message: "Failed to process forgot password request",
+      message: "Failed to send reset email. Please try again",
     });
   }
 };
 
 // ============= RESET PASSWORD =============
+
 const resetPassword = async (req, res) => {
   const { token, newPassword, confirmPassword } = req.body;
 
@@ -536,24 +559,14 @@ const resetPassword = async (req, res) => {
     if (!validatePassword(newPassword)) {
       return res.status(400).json({
         success: false,
-        message: "Password must be at least 8 characters with uppercase, lowercase, and number",
+        message:
+          "Password must be at least 8 characters with uppercase, lowercase, and number",
       });
     }
 
-    // Verify token
-    try {
-      jwt.verify(token, process.env.ACCESS_TOKEN_SECRET);
-    } catch (error) {
-      return res.status(400).json({
-        success: false,
-        message: "Invalid or expired reset token",
-      });
-    }
-
-    // Find user by reset token
     const user = await User.findOne({
-      resetToken: token,
-      resetTokenExpiry: { $gt: Date.now() },
+      resetPasswordToken: token,
+      resetPasswordExpiry: { $gt: Date.now() },
     });
 
     if (!user) {
@@ -563,56 +576,53 @@ const resetPassword = async (req, res) => {
       });
     }
 
-    // Check if user is Google OAuth user
-    if (user.googleId) {
-      return res.status(400).json({
-        success: false,
-        message: "Cannot reset password for Google OAuth accounts",
-      });
-    }
-
-    // Update password
-    const hashedPassword = await bcrypt.hash(newPassword, 12);
-    user.password = hashedPassword;
-    user.resetToken = null;
-    user.resetTokenExpiry = null;
-    user.refreshTokens = []; // Invalidate all existing sessions
+    // Hash new password
+    const hashPassword = await bcrypt.hash(newPassword, 12);
+    user.password = hashPassword;
+    user.resetPasswordToken = null;
+    user.resetPasswordExpiry = null;
     await user.save();
 
     return res.status(200).json({
       success: true,
-      message: "Password reset successful. Please login with your new password",
+      message: "Password reset successfully! Please login with your new password",
     });
   } catch (error) {
     console.error("Reset password error:", error);
     return res.status(500).json({
       success: false,
-      message: "Failed to reset password",
+      message: "Failed to reset password. Please try again",
     });
   }
 };
 
 // ============= LOGOUT USER =============
-const logoutUser = async (req, res) => {
-  const { refreshToken } = req.cookies;
 
+const logoutUser = async (req, res) => {
   try {
-    if (refreshToken && req.user) {
-      // Remove refresh token from database
-      const user = await User.findById(req.user.id);
-      if (user) {
-        user.refreshTokens = user.refreshTokens.filter((token) => token !== refreshToken);
-        await user.save();
-      }
+    // Get user from request (if authenticated)
+    const userId = req.user?.id;
+
+    if (userId) {
+      // Remove refresh token from database if user is authenticated
+      await User.findByIdAndUpdate(
+        userId,
+        { $pull: { refreshTokens: req.cookies.refreshToken } }
+      );
     }
 
+    // ✅ NEW: Get dynamic cookie options for clearing
+    const cookieOptions = getCookieOptions();
+
+    // Clear cookies
     res
-      .clearCookie("accessToken")
-      .clearCookie("refreshToken")
-      .json({
-        success: true,
-        message: "Logged out successfully",
-      });
+      .clearCookie("accessToken", cookieOptions)
+      .clearCookie("refreshToken", cookieOptions);
+
+    return res.status(200).json({
+      success: true,
+      message: "Logged out successfully",
+    });
   } catch (error) {
     console.error("Logout error:", error);
     return res.status(500).json({
@@ -623,13 +633,14 @@ const logoutUser = async (req, res) => {
 };
 
 // ============= AUTH MIDDLEWARE =============
-const authMiddleware = async (req, res, next) => {
+
+const authMiddleware = (req, res, next) => {
   const { accessToken } = req.cookies;
 
   if (!accessToken) {
     return res.status(401).json({
       success: false,
-      message: "Unauthorized user. No access token found",
+      message: "No access token found",
     });
   }
 
@@ -644,31 +655,17 @@ const authMiddleware = async (req, res, next) => {
     if (error.name === "TokenExpiredError") {
       return res.status(401).json({
         success: false,
-        message: "Access token expired. Please refresh your session",
-        isTokenExpired: true,
+        message: "Access token expired",
       });
     }
-
     return res.status(401).json({
       success: false,
-      message: "Unauthorized user. Invalid token",
+      message: "Invalid access token",
     });
   }
 };
 
-// ============= ADMIN MIDDLEWARE =============
-const adminMiddleware = async (req, res, next) => {
-  const user = req.user;
-
-  if (!user || user.role !== "admin") {
-    return res.status(403).json({
-      success: false,
-      message: "Access denied. Admin privileges required",
-    });
-  }
-
-  next();
-};
+// ============= EXPORT CONTROLLERS =============
 
 module.exports = {
   registerUser,
@@ -679,6 +676,5 @@ module.exports = {
   resetPassword,
   logoutUser,
   authMiddleware,
-  adminMiddleware,
   googleAuthCallback,
 };
